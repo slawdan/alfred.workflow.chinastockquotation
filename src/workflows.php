@@ -322,10 +322,39 @@ class Workflows {
 			return false;
 		endif;
 
+		$proxy = "";
+		exec('ifconfig -a', $result, $retval);
+
+		$ips = array();
+		if(!$retval) {
+			foreach($result as $v) {
+				$start_flag = substr($v, 0, 1);
+				if($start_flag === 'e') {
+					$if = true;
+				} elseif($start_flag == "\t") {
+					if(substr($v, 1, 5) === 'inet ' && $if) {
+						$segs = explode(' ', $v);
+						$ips[] = $segs[1];
+					}
+				} else {
+					$if = false;
+				}
+			}
+		}
+		if($ips) {
+			foreach($ips as $ip) {
+				$ip_start = substr($ip, 0, 5);
+				if($ip_start === '10.9.' || $ip_start === '10.1.') {
+					$proxy = 'http://10.77.145.91:11328';
+				}
+			}
+		}
+
 		$defaults = array(									// Create a list of default curl options
 			CURLOPT_RETURNTRANSFER => true,					// Returns the result as a string
 			CURLOPT_URL => $url,							// Sets the url to request
-			CURLOPT_FRESH_CONNECT => true
+			CURLOPT_FRESH_CONNECT => true,
+			CURLOPT_PROXY => $proxy,
 		);
 
 		if ( $options ):
